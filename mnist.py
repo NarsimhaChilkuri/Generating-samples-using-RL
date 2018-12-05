@@ -1,52 +1,47 @@
-import numpy as np
-import matplotlib
+iimport numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import colors
-import numpy as np
+from matplotlib.pyplot import cm
 from tqdm import tqdm_notebook as tqdm
 from keras.models import load_model
 
-num_len = 8
-possible_actions = np.arange(0,10)
-action_values = np.zeros((10, 10**(num_len -1)))
-counter = np.ones((10, 10**(num_len -1)))
+num = 2
+model = load_model('mnistCNN.h5')
+possible_actions = np.arange(0,2)
+action_values = np.zeros((28, 28, 2))
+counter = np.ones((28, 28, 2))
 
 def incremental_mean(current_mean, new_value, n):
     new_mean = current_mean + 1/n * (new_value - current_mean)
     return new_mean
 
 def compute_reward(x):
-    div = int(x) % 2
-    if div == 0:
-        return 1
+    X = np.reshape(x, (1, 28, 28, 1))
+    pred = np.asscalar(model.predict_classes(X))
+    prob = model.predict(X)[0][num]
+    if pred == num:
+        return 1*prob
     else:
         return 0
 
 def generate_episode(epsilon):
-    episode = ""
-    for i in range(0, num_len):
-        if i == 0:
-            optimal_action = str(np.random.randint(1, 10))
-        else:
-            optimal_action = str(np.random.randint(0, 10))
+    episode = np.zeros((28, 28))
+    for i in range(0, 28):
+        for j in range(0, 28):
+            optimal_action = np.random.binomial(1, 0.5)
             if np.random.binomial(1, epsilon):
-                action_value = action_values[:, int(episode)]
-                max_value = max(action_value)
-                best_action_indices = [j for j, x in enumerate(action_value) if x == max_value]
-                optimal_action = best_action_indices[np.random.randint(0, len(best_action_indices))]
-        episode += str(optimal_action)
+                action_value = action_values[i, j, :]
+                optimal_action = np.asscalar(np.argmax(action_value))
+            episode[i,j] = optimal_action
     return episode
 
 def update_action_values(eps):
     reward = compute_reward(eps)
-    for i,s in enumerate(eps):
-        if i == 0:
-            n = counter[int(s), i]
-            action_values[int(s), i] = incremental_mean(action_values[int(s), i], reward, n)
-            counter[int(s), i] += 1
-        else:
-            n = counter[int(eps[i:i+1]), int(eps[0:i])]
-            action_values[int(eps[i:i+1]), int(eps[0:i])] = incremental_mean(action_values[int(eps[i:i+1]), int(eps[0:i])], reward, n)
+    for i in range(0, 28):
+        for j in range(0, 28):
+            k = int(eps[i,j])
+            n = counter[i, j, k]
+            action_values[i,j,k] = incremental_mean(action_values[i,j,k], reward, n)
+            counter[i, j, k] += 1
 
 def run_program(no_of_episodes, epsilon):
     for i in tqdm(range(0, no_of_episodes)):
