@@ -15,7 +15,7 @@ state-space = {(0, 0), (0,1), ..., (27, 27)}; i and j are in [0, 27].
 Reward = mnit-model with accuracy > 0.99; below is a test of this model where 0 and 1 are the only allowed values.
 ![mnist](Images/mnist.png)
 
-Training on 5000 episodes with an epsilon of 0.8 and a reward of 1 for class-prediction of 2, the algorithm learned a policy. This policy, again with epsilon of 0.8, produced the following images: 
+Training on 5000 episodes with an epsilon of 0.8 and a reward of 1 for class-prediction of 2, the algorithm learned a policy. This policy, again with epsilon of 0.8, produced the following images. These images received a class-prediction of 2 by the same mnist-model.  
 ![generated_mnist](Images/generated_mnist.png)
 
 
